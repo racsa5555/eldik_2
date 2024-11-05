@@ -179,9 +179,9 @@ async def set_full_name(message:Message,state:FSMContext):
     await state.set_state(UserState.phone_number)
     data = await state.get_data()
     if data['language'] == 'RU':
-        await message.answer(text = 'Пожалуйста, напишите номер телефона,\nпример: +7**********')
+        await message.answer(text = 'Пожалуйста, напишите номер телефона,\nпример: 8**********')
     else:
-        await message.answer(text = 'Сураныч , телефон номеринизди жазыныз, \n мисалы: +7**********')
+        await message.answer(text = 'Сураныч , телефон номеринизди жазыныз, \n мисалы: 8**********')
 
 
 @dp.message(UserState.phone_number)
