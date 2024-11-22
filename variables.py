@@ -6,7 +6,7 @@ LINK_WHATSAPP = 'https://wa.me/79261068788'
 
 
 # ADRESS_BISH = '👤 蓝天LT01-{}\n📞  15547009391\n{}: \n广东省广州市白云区江高镇南岗三元南路广新元素54号云创港1119-蓝天LT01库房-{} ({})'
-ADRESS_MOSCOW = '别里科夫 RU-{}高生生\n电话 18565140222{}: \n广东省佛山市南海区恒大御景湾25号BK库房(RU-{}){} \n Почтовый индекс: 528200'
+ADRESS_MOSCOW = '高生生 RU-{}高生生\n电话 13189029678{}: \n广东省广州市荔湾区站前路33号288库房(RU-{}){} \n Почтовый индекс: 528200'
 PINDUODUO = 'https://youtube.com/shorts/eW9HNJ_OiMM?si=k4Pvx9B9JJP_rM4F'
 TAOBAO = 'https://youtube.com/shorts/JHp78xqBDwg?si=x5HZNp56I6CRQT0N'
 ONE_AND_SIX = 'https://youtube.com/shorts/KHVRE2nC8Fk?si=Z_JFZzAJk0aAr0GC' #1688
