@@ -11,13 +11,12 @@ from decouple import config
 
 from aiogram.fsm.context import FSMContext
 
-from goole_sheet import register_client,find_order_by_id,update_google_sheet,find_order_by_track_code,update_client_by_id,append_products,find_user_by_data
+from goole_sheet import register_client,find_order_by_id,update_google_sheet,update_client_by_id,append_products,find_user_by_data
+from goole_sheet.sheet import send_notification, set_client_id_to_product
 from states import UserState,Calculator,Admin,Track_code,RegisterState
 from kbds import *
+from utils import get_users, write_user_in_file
 from variables import *
-
-LIST_USERS = set()
-
 
 
 TOKEN = config('TOKEN')
@@ -26,7 +25,7 @@ bot = Bot(TOKEN)
 
 dp = Dispatcher()
 
-id = 2670
+id = 1000
 
 @dp.message(CommandStart())
 async def start(message: types.Message,state:FSMContext):
@@ -58,7 +57,6 @@ async def set_lang(callback:CallbackQuery,state:FSMContext):
 @dp.callback_query(lambda query: query.data.startswith('switch_language_'))
 async def set_l(callback:CallbackQuery,state:FSMContext):
     await set_lang(callback,state)
-
 
 
 @dp.callback_query(lambda query: query.data == 'update_profile')
@@ -141,12 +139,12 @@ async def set_id(message:Message,state:FSMContext):
             await message.answer(text = send_profile(res),reply_markup=default_kb_ru)
             await state.set_state()
         else:
-            await message.answer(text = res)
+            await message.answer(text = res, reply_markup=cancel_calc_ru)
 
 @dp.callback_query(lambda query: query.data.startswith('city_set'))
 async def set_bish(callback:CallbackQuery,state:FSMContext):
-    if callback.data == 'city_set_moscow':
-        await state.update_data(city = 'MOSCOW')
+    if callback.data == 'city_set_kemin':
+        await state.update_data(city = 'KEMIN')
     data = await state.get_data()
     if data['language'] == 'RU':
         await callback.message.answer(text = 'Как Вас зовут?')
@@ -179,9 +177,9 @@ async def set_full_name(message:Message,state:FSMContext):
     await state.set_state(UserState.phone_number)
     data = await state.get_data()
     if data['language'] == 'RU':
-        await message.answer(text = 'Пожалуйста, напишите номер телефона,\nпример: 8**********')
+        await message.answer(text = 'Пожалуйста, напишите номер телефона,\nпример: 0700123456')
     else:
-        await message.answer(text = 'Сураныч , телефон номеринизди жазыныз, \n мисалы: 8**********')
+        await message.answer(text = 'Сураныч , телефон номеринизди жазыныз, \n мисалы: 0700123456')
 
 
 @dp.message(UserState.phone_number)
@@ -205,26 +203,26 @@ async def set_phone_number(message:Message,state:FSMContext):
                 profile_kb = profile_kb_kg
                 await message.answer(text = '✅ Ийгиликтүү профильди өзгөртүп алдыныз !',reply_markup=default_kb)
                 await message.answer(text = send_profile(data),reply_markup=profile_kb.as_markup())
-            update_client_by_id(data.get('id'),data_new,data.get('ref'))
+            update_client_by_id('JKA'+ data.get('id'),data_new,data.get('ref'))
             await state.set_state()
         else:
             global id
-            await state.update_data(id = id)
+            await state.update_data(id = 'JKA-'+str(id))
             id+=1
             data = await state.get_data()
             if data['language'] == 'RU':
                 default_kb = default_kb_ru
                 profile_kb = profile_kb_ru
-                global LIST_USERS
-                LIST_USERS.add(message.from_user.id)
+                write_user_in_file(message.from_user.id)
                 await message.answer(text = '✅ Успешная регистрация !',reply_markup=default_kb)
                 await message.answer(text = send_profile(data),reply_markup=profile_kb.as_markup())
             else:
                 default_kb = default_kb_kg
                 profile_kb = profile_kb_kg
-                LIST_USERS.add(message.from_user.id)
+                write_user_in_file(message.from_user.id)
                 await message.answer(text = '✅ Ийгиликтүү каттоо !',reply_markup=default_kb)
                 await message.answer(text = send_profile(data),reply_markup=profile_kb.as_markup())
+            data.update({'tg_id': message.from_user.id})
             register_client(data)
             await state.set_state()
     else:
@@ -248,11 +246,12 @@ async def get_profile(message:Message,state:FSMContext):
 
 @dp.message(F.text[1:].in_({'Адреса','Дарек'}))
 async def get_address(message:Message,state:FSMContext):
-    global ADRESS_MOSCOW
+    global ADRESS_KEMIN
     data = await state.get_data()
     lang = data.get('language')
-    res = str(send_adress(data.get('id'),data.get('phone_number'),lang,data.get('city'), ADRESS_MOSCOW))
+    res = str(send_adress(data.get('id'),data.get('phone_number'),lang,data.get('city'), ADRESS_KEMIN))
     await message.answer(text = res)
+    await message.answer(text=dop_text)
 
 
 @dp.message(F.text[1:].in_({'Калькулятор','Эсептөөчү'}))
@@ -287,13 +286,9 @@ async def set_width(message:Message,state:FSMContext):
     if message.text.isdigit():
         await state.update_data(weight = int(message.text))
         data = await state.get_data()
-        if data.get('city') == 'MOSCOW':
-            global PRICE_WEIGHT_MOSCOW
-            global PRICE_WEIGHT_MOSCOW_200
-            price_weight = PRICE_WEIGHT_MOSCOW
-            price_weight_200 = PRICE_WEIGHT_MOSCOW_200
-        if data['weight'] >= 200:
-            weight_price = data['weight'] * price_weight_200
+        if data.get('city') == 'KEMIN':
+            global PRICE_WEIGHT_KEMIN
+            price_weight = PRICE_WEIGHT_KEMIN
         else:
             weight_price = data['weight'] * price_weight
         weight_price = round(weight_price, 1)
@@ -318,61 +313,60 @@ async def set_width(message:Message,state:FSMContext):
 
 
 
-@dp.message(F.text[1:].in_({'Издөө','Отслеживание'}))
+@dp.message(F.text[1:].in_({'Менин товарларым','Мои посылки'}))
 async def tracking(message:Message,state:FSMContext):
-    data = await state.get_data()
-    if data['language'] == 'RU':
-        tracking_kb = tracking_kb_ru
-        await message.answer(text = 'Выберите способ отслеживания',reply_markup=tracking_kb.as_markup())
-    else:
-        tracking_kb = tracking_kb_kg
-        await message.answer(text = 'Издөө режим тандаңыз',reply_markup=tracking_kb.as_markup())
-
-
-@dp.callback_query(lambda query: query.data == 'client_id')
-async def tracking_by_client_id(callback:CallbackQuery,state:FSMContext):
     data = await state.get_data()
     client_id = data.get('id')
     lang = data.get('language')
     if data.get('language') == 'RU':
-        await callback.message.answer(text = 'Обработка, подождите несколько секунд...')
+        await message.answer(text = 'Обработка, подождите несколько секунд...')
     else:
-        await callback.message.answer(text = 'Күтүп турунуз...')
+        await message.answer(text = 'Күтүп турунуз...')
     res = find_order_by_id(str(client_id),lang)
-    await callback.message.answer(text = res)
+    await message.answer(text = res)
 
 
-@dp.callback_query(lambda query: query.data == 'track-code')
-async def tracking_by_client_id(callback:CallbackQuery,state:FSMContext):
+@dp.message(F.text[1:].in_({'Трек код кошуу','Добавить трек код'}))
+async def tracking_by_client_id(message:Message,state:FSMContext):
     data = await state.get_data()
     if data['language'] == 'RU':
-        await callback.message.answer(text = 'Введите трек-код товара',reply_markup=cancel_calc_ru)
+        await message.answer(text = 'Введите трек-код товара',reply_markup=cancel_calc_ru)
     else:
-        await callback.message.answer(text ='Товардын трек кодун жазыңыз',reply_markup = cancel_calc_kg)
+        await message.answer(text ='Товардын трек кодун жазыңыз',reply_markup = cancel_calc_kg)
     await state.set_state(Track_code.track_code)
 
 
 @dp.message(Track_code.track_code)
-async def track_code(message:Message,state:FSMContext):
-    track_code = message.text
-    if message.text in {'Отмена','Артка'}:
-        data = await state.get_data()
-        lang = data.get('language')
-        res = cancel_sender(lang)
-        if lang == 'RU':
-            default_kb = default_kb_ru
-        else:
-            default_kb = default_kb_kg
-        await message.answer(text = res,reply_markup=default_kb)
+async def add_track_code(message:Message,state:FSMContext):
+    if message.text == 'Отмена':
+        default_kb = default_kb_ru
+        await message.answer(text = 'Вы отменили последнее действие',reply_markup=default_kb)
         await state.set_state()
-    else: 
-        data = await state.get_data()
-        if data.get('language') == 'RU':
-            await message.answer(text = 'Обработка, подождите несколько секунд...')
+    elif message.text == 'Артка':
+        default_kb = default_kb_kg
+        await message.answer(text = 'Акыркы аракетиңизди артка кайтардыңыз',reply_markup=default_kb)
+        await state.set_state()
+    track_code = message.text
+    data = await state.get_data()
+    client_id = data.get('id')
+    res = set_client_id_to_product(track_code, str(client_id))
+    if not res:
+        if data['language'] == 'RU':
+            text = 'Трек код с таким товаром не найден'
+            kb = default_kb_ru
         else:
-            await message.answer(text = 'Күтүп турунуз...')
-        res = find_order_by_track_code(track_code,data.get('language'))
-        await message.answer(text = res)
+            text = 'Бул товар табылганжок'
+            kb = default_kb_kg
+        await message.answer(text=text, reply_markup=kb)
+    else:
+        if data['language'] == 'RU':
+            text = 'Трек код успешно добавлен'
+            kb = default_kb_ru
+        else:
+            text = 'Трек код кошулду'
+            kb = default_kb_kg
+        await message.answer(text=text, reply_markup=kb)
+    await state.set_state()
 
 
 @dp.message(Command(commands=['admin']))
@@ -482,8 +476,7 @@ async def set_price_v2(message:Message,state:FSMContext):
     data = await state.get_data()
     if data.get('is_admin') == True:
         new_value = message.text    
-        global PRICE_WEIGHT_MOSCOW
-        global PRICE_WEIGHT_MOSCOW_200
+        global PRICE_WEIGHT_KEMIN
         global TAOBAO
         global ONE_AND_SIX
         global PINDUODUO
@@ -492,10 +485,8 @@ async def set_price_v2(message:Message,state:FSMContext):
         global ADMIN_PASSWORD
         global ADRESS_BISH
         if '_' in data['data']:
-            if data['data'] == 'weight_moscow':
-                PRICE_WEIGHT_MOSCOW = float(new_value)
-            elif data['data'] == 'weight_moscow_200':
-                PRICE_WEIGHT_MOSCOW_200 = float(new_value)
+            if data['data'] == 'weight_kemin':
+                PRICE_WEIGHT_KEMIN = float(new_value)
             await message.answer(text = 'Вы успешно сменили цену')
         elif data['data'] == 'whatsapp':
             LINK_WHATSAPP = new_value
@@ -503,9 +494,9 @@ async def set_price_v2(message:Message,state:FSMContext):
         elif data['data'] == 'resetpassword':
             ADMIN_PASSWORD = new_value
             await message.answer(text = 'Вы сменили пароль')
-        if data['data'] == 'moscow':
-            ADRESS_MOSCOW = str(new_value)
-            await message.answer(text = 'Вы сменили адрес Москвы')
+        if data['data'] == 'kemin':
+            ADRESS_KEMIN = str(new_value)
+            await message.answer(text = 'Вы сменили адрес Кемин')
         else:
             if data['data'] == 'taobao':
                 TAOBAO = new_value
@@ -525,7 +516,7 @@ async def set_price_v2(message:Message,state:FSMContext):
 @dp.message(F.document)
 async def handle_admin_documents(message: types.Message, state: FSMContext):
     data = await state.get_data()
-    statuses = {'В Китае','В Пути','В КР'}
+    statuses = {'В Пути','Сортировка', 'Готов к выдаче'}
     if data.get("is_admin") == True:
         if message.caption not in statuses:
             await message.answer(text = f'Введите к прикрепленному файлу один из статусов:{statuses}')
@@ -533,15 +524,14 @@ async def handle_admin_documents(message: types.Message, state: FSMContext):
             file_info = await bot.get_file(message.document.file_id)
             file_path = file_info.file_path
             file = await bot.download_file(file_path)
-            df = pd.read_excel(file,header = None)
-            track_codes = df.iloc[:,0].to_list()
+            df = pd.read_excel(file)
             data = df.iloc[:,:]
             new_status = message.caption
-            if new_status == 'В Китае':
+            if new_status == 'В Пути':
                 append_products(data)
                 await message.answer('Все готово,проверьте')
             else:
-                update_google_sheet(set(track_codes),new_status)
+                await update_google_sheet(data,new_status, message.bot)
                 await message.answer('Все готово,проверьте')
     else:
         await message.answer('Неверный формат ввода')
@@ -551,9 +541,9 @@ async def handle_admin_documents(message: types.Message, state: FSMContext):
 async def help(message:Message,state:FSMContext):
     data = await state.get_data()
     if data['language'] == 'RU':
-        await message.answer(text = f'🛠️Контакт для поддержки📩\n{LINK_WHATSAPP}')
+        await message.answer(text = support_text)
     else:
-        await message.answer(text = f'🛠️Колдоо байланыш📩\n{LINK_WHATSAPP}')
+        await message.answer(text = support_text)
 
 
 @dp.message(F.text[1:].in_({'Инструкция','Нускама'}))
@@ -578,8 +568,8 @@ async def instruction(callback:CallbackQuery):
         await callback.message.answer(text = POIZON)
 
 async def send_news(message):
-    global LIST_USERS
-    for user_id in LIST_USERS:
+    users_ids = get_users()
+    for user_id in users_ids:
         await bot.send_message(user_id,message)
 
 
@@ -601,10 +591,34 @@ async def logout_profile(callback:CallbackQuery,state:FSMContext):
     await hi(callback.message,state)
 
 
+@dp.callback_query(lambda query: query.data == 'send_delivered')
+async def send_delivered(callback:CallbackQuery,state:FSMContext):
+    await callback.message.answer('Введите трек коды через пробел')
+    await state.set_state(Admin.send_delivered)
+
+@dp.message(Admin.send_delivered)
+async def send_deliv(message:Message,state:FSMContext):
+    track_codes = message.text.split()
+    results = []
+    for code in track_codes:
+        res = await send_notification(code, bot)
+        results.append(res)
+    result = '\n'.join(results)
+    await message.answer(text=result)
+
+
 @dp.message(Command(commands=['clear']))
 async def clear(message:Message,state:FSMContext):
     await state.set_data({})
     await start(message,state)
+
+@dp.message(F.text[1:].in_({'Запрещенные товары','Тыюу салынган товарлар'}))
+async def zapret_tovars(message: Message):
+    await message.answer(text=zapret_text)
+
+
+
+@dp.message(F.text[1:].in_({'Запрещенные товары','Тыюу салынган товарлар'}))
 
 async def main():
     await dp.start_polling(bot)

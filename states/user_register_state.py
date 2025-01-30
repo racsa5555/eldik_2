@@ -32,3 +32,4 @@ class Admin(StatesGroup):
     set_price = State()
     data = State()
     news = State()
+    send_delivered = State()

@@ -33,7 +33,7 @@ login_or_register_kg = ReplyKeyboardMarkup(
 
 set_city_kb = InlineKeyboardBuilder(
     markup= [
-        [InlineKeyboardButton(text = 'Москва',callback_data='city_set_moscow'),]
+        [InlineKeyboardButton(text = 'Кемин',callback_data='city_set_kemin'),]
     ]   
 )
 profile_kb_ru = InlineKeyboardBuilder(
@@ -54,17 +54,18 @@ profile_kb_kg = InlineKeyboardBuilder(
 default_kb_ru = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text = '🔎Отслеживание'),
             KeyboardButton(text = '👤Профиль'),
-            
-        ],
-        [
-            KeyboardButton(text = '⚙️Поддержка'),
             KeyboardButton(text = '📬Адреса'),
+            KeyboardButton(text = '📦Мои посылки'),
         ],
         [
-            KeyboardButton(text = '📏Калькулятор'),
             KeyboardButton(text = '📕Инструкция'),
+            KeyboardButton(text = '🚫Запрещенные товары'),
+            KeyboardButton(text = '⚙️Поддержка'),
+        ],
+        [
+            KeyboardButton(text = '📚Тариф/условия'),
+            KeyboardButton(text = '✅Добавить трек код'),
         ]
     ],
     resize_keyboard=True
@@ -73,17 +74,19 @@ default_kb_ru = ReplyKeyboardMarkup(
 default_kb_kg = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text = '🔎Издөө'),
             KeyboardButton(text = '👤Профиль'),
+            KeyboardButton(text = '📬Дарек'),
+            KeyboardButton(text = '📦Менин товарларым'),
             
         ],
         [
+            KeyboardButton(text = '📕Нускама'),
+            KeyboardButton(text = '🚫Тыюу салынган товарлар'),
             KeyboardButton(text = '⚙️Колдоо'),
-            KeyboardButton(text = '📬Дарек'),
         ],
         [
-            KeyboardButton(text = '📏Эсептөөчү'),
-            KeyboardButton(text = '📕Нускама'),
+            KeyboardButton(text = '📚Жеткирүү баасы/мөөнөтү'),
+            KeyboardButton(text = '✅Трек код кошуу'),
         ]
     ],
     resize_keyboard=True
@@ -137,7 +140,8 @@ set_variables_kbds = InlineKeyboardBuilder(
         [InlineKeyboardButton(text = 'Поменять маркетплейсы',callback_data='set_marketplace')],
         [InlineKeyboardButton(text = 'Рассылка новостей',callback_data = 'send_broadcast')],
         [InlineKeyboardButton(text = 'Сменить пароль админа',callback_data = 'reset_password')],
-        [InlineKeyboardButton(text = 'Сменить адрес Москвы',callback_data = 'reset_city_moscow')],
+        [InlineKeyboardButton(text = 'Сменить адрес Кемина',callback_data = 'reset_city_kemin')],
+        [InlineKeyboardButton(text = 'Рассылка о выданной посылке',callback_data = 'send_delivered')],
         [InlineKeyboardButton(text = 'Выйти',callback_data='logout_admin')]
     ]
 )
@@ -153,8 +157,6 @@ set_marketplace = InlineKeyboardBuilder(
 
 set_price = InlineKeyboardBuilder(
     markup=[
-        [InlineKeyboardButton(text = 'Цена по весу в Москве',callback_data = 'p_price_weight_moscow')],
-        [InlineKeyboardButton(text = 'Цена по весу в Москве 200+',callback_data = 'p_price_weight_moscow_200')]
+        [InlineKeyboardButton(text = 'Цена по весу в Кемине',callback_data = 'p_price_weight_kemin')]
     ]
 )
-        
