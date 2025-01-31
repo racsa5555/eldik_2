@@ -90,9 +90,10 @@ async def hi(message: Message, state: FSMContext) -> None:
 async def register(message:Message,state:FSMContext):
     data = await state.get_data()
     if data['language'] == 'RU':
-        await message.answer(text = 'С какого Вы города',reply_markup=set_city_kb.as_markup())
+        await message.answer(text = 'С какого Вы города')
     else:
-        await message.answer(text = 'Кайсыл шаардан болосуз?',reply_markup=set_city_kb.as_markup())
+        await message.answer(text = 'Кайсыл шаардан болосуз?')
+    await state.set_state(UserState.city)
 
 
 @dp.message(F.text.in_({'Войти','Кируу'}))
@@ -141,15 +142,14 @@ async def set_id(message:Message,state:FSMContext):
         else:
             await message.answer(text = res, reply_markup=cancel_calc_ru)
 
-@dp.callback_query(lambda query: query.data.startswith('city_set'))
-async def set_bish(callback:CallbackQuery,state:FSMContext):
-    if callback.data == 'city_set_kemin':
-        await state.update_data(city = 'KEMIN')
+@dp.message(UserState.city)
+async def set_bish(message:Message,state:FSMContext):
+    await state.update_data(city = message.text)
     data = await state.get_data()
     if data['language'] == 'RU':
-        await callback.message.answer(text = 'Как Вас зовут?')
+        await message.answer(text = 'Как Вас зовут?')
     else:
-        await callback.message.answer(text = 'Сиздин атыңыз ким?')
+        await message.answer(text = 'Сиздин атыңыз ким?')
     await state.set_state(UserState.name)
 
 @dp.message(UserState.name)
@@ -286,11 +286,9 @@ async def set_width(message:Message,state:FSMContext):
     if message.text.isdigit():
         await state.update_data(weight = int(message.text))
         data = await state.get_data()
-        if data.get('city') == 'KEMIN':
-            global PRICE_WEIGHT_KEMIN
-            price_weight = PRICE_WEIGHT_KEMIN
-        else:
-            weight_price = data['weight'] * price_weight
+        global PRICE_WEIGHT_KEMIN
+        price_weight = PRICE_WEIGHT_KEMIN
+        weight_price = data['weight'] * price_weight
         weight_price = round(weight_price, 1)
         data = await state.get_data()
         if data['language'] == 'RU':

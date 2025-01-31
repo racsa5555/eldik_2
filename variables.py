@@ -10,13 +10,11 @@ TAOBAO = 'https://youtube.com/shorts/JHp78xqBDwg?si=x5HZNp56I6CRQT0N'
 ONE_AND_SIX = 'https://youtube.com/shorts/KHVRE2nC8Fk?si=Z_JFZzAJk0aAr0GC' #1688
 POIZON = 'https://youtube.com/shorts/PL473nyMvsM?si=2PH_SX1VhrurwvoI'
 
-def send_adress(id,phone_number,lang,city,ADRESS_KEMIN):
+def send_adress(id,phone_number,lang, ADRESS_KEMIN):
     if lang == 'RU':
-        if city == 'KEMIN':
-            return ADRESS_KEMIN.format(id[4:],'Полный адрес',id,phone_number)
+        return ADRESS_KEMIN.format(id[4:],'Полный адрес',id,phone_number)
     else:
-        if city == 'KEMIN':
-            return ADRESS_KEMIN.format(id[4:],'Толук адрес',id,phone_number)
+        return ADRESS_KEMIN.format(id[4:],'Толук адрес',id,phone_number)
     
 
 def send_profile(kwargs):
@@ -24,13 +22,11 @@ def send_profile(kwargs):
         text = '📃Ваш профиль📃\n🪪 Персональный id: {}\n👤 Имя: {}\n👤 Фамилия: {}\n📞 Номер: {}\n🌍 Геопозиция: {}'
     if kwargs['language'] == 'KG':
         text = '📃Сиздин профилиниз📃\n🪪 Жеке id: {}\n👤 Аты: {}\n👤 Фамилия: {}\n📞 Номер: {}\n🌍 Турган жери: {}'
-    if kwargs["city"] == 'KEMIN':
-        city = 'Кемин'
 
     if kwargs['language'] == 'RU':
-        return text.format(str(kwargs['id']), kwargs['name'], kwargs['full_name'], kwargs['phone_number'], city)
+        return text.format(str(kwargs['id']), kwargs['name'], kwargs['full_name'], kwargs['phone_number'], kwargs['city'])
     elif kwargs['language'] == 'KG':
-        return text.format(str(kwargs['id']), kwargs['name'], kwargs['full_name'], kwargs['phone_number'], city)
+        return text.format(str(kwargs['id']), kwargs['name'], kwargs['full_name'], kwargs['phone_number'], kwargs['city'])
 
 def cancel_sender(lang):
     if lang == 'RU':
