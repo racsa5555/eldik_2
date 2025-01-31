@@ -249,7 +249,7 @@ async def get_address(message:Message,state:FSMContext):
     global ADRESS_KEMIN
     data = await state.get_data()
     lang = data.get('language')
-    res = str(send_adress(data.get('id'),data.get('phone_number'),lang,data.get('city'), ADRESS_KEMIN))
+    res = str(send_adress(data.get('id'),data.get('phone_number'),lang, ADRESS_KEMIN))
     await message.answer(text = res)
     await message.answer(text=dop_text)
 
