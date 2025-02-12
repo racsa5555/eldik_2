@@ -26,6 +26,17 @@ def append_products(df):
     sheet.append_rows(data)
     return True
 
+def sort_status(data):
+    tz = timezone(timedelta(hours=6))
+    date = datetime.now(tz)
+    current_date = date.strftime("%m-%d")
+    sheet = client.open(title = 'Eldik_Express_Products').sheet1 
+    sheet_data = sheet.get_all_records()
+    for index, row in data.iterrows():
+        for i, row2 in enumerate(sheet_data, start=2):
+            if str(row.iloc[1]) == str(row2['Трек Код']):
+                sheet.update(f'C{i}:D{i}', [['Сортировка', current_date]])
+
 
 
 
