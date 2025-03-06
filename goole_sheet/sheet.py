@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import gspread
 import pandas as pd
+import asyncio
 from google.oauth2.service_account import Credentials
 from gspread_formatting import Color, CellFormat,format_cell_range
 
@@ -67,10 +68,16 @@ async def update_google_sheet(data, new_status, bot):
                 tg_id = row['tg_id']
                 if tg_id != '':
                     await bot.send_message(text=f'Ваша посылка с трек кодом {track_code} прибыла на склад', chat_id=int(tg_id))
+        k = 0
         for i, row in enumerate(sheet_data, start=2):
+            k += 1
             if row['Трек Код'] == track_code:
                 price = price if price not in ['0', 0] else ''
                 sheet.update(f'A{i}:E{i}', [[track_code, code, new_status, current_date, price]])
+            if k == 100:
+                await asyncio.sleep(1)
+                k = 0
+
 
 
 
