@@ -27,56 +27,75 @@ def append_products(df):
     sheet.append_rows(data)
     return True
 
+import time
 def sort_status(data):
     tz = timezone(timedelta(hours=6))
     date = datetime.now(tz)
     current_date = date.strftime("%m-%d")
-    sheet = client.open(title = 'Eldik_Express_Products').sheet1 
+
+    sheet = client.open(title='Eldik_Express_Products').sheet1
     sheet_data = sheet.get_all_records()
+
+    count = 0  # Счётчик запросов
     for index, row in data.iterrows():
         for i, row2 in enumerate(sheet_data, start=2):
-            if str(row.iloc[1]) == str(row2['Трек Код']):
-                sheet.update(f'C{i}:D{i}', [['Сортировка', current_date]])
-
+            if str(row.iloc[1]) == str(row2['Трек Код']) and row2['Статус'] != 'Сортировка':
+                while True:  # Бесконечный цикл, пока не удастся обновить
+                    try:
+                        sheet.update(f'C{i}:D{i}', [['Сортировка', current_date]])
+                        break  # Если успешно — выходим из цикла
+                    except:
+                        time.sleep(2)
+                count += 1
+                if count % 100 == 0:  # Пауза после 100 обновлений
+                    time.sleep(1)
 
 
 
 async def update_google_sheet(data, new_status, bot):
-    sheet = client.open(title = 'Eldik_Express_Products').sheet1 
+    sheet = client.open(title='Eldik_Express_Products').sheet1
     sheet_data = sheet.get_all_records()
+    
     tz = timezone(timedelta(hours=6))
-    date = datetime.now(tz)
-    current_date = date.strftime("%m-%d")
+    current_date = datetime.now(tz).strftime("%m-%d")
+
     spreadsheet2 = client.open('Eldik_Express_Clients')
-    sheets2 = spreadsheet2.worksheets()
+    sheets2 =  spreadsheet2.worksheets()
     clients = sheets2[0]
     data2 = clients.get_all_records()
+
+    updates = []  # Список для массового обновления
+
     for index, row in data.iterrows():
         track_code = row['Трек код']
-        if pd.isna(data.at[index, 'Код клиента']):
-            code = client_code
-        else:
-            client_code = row['Код клиента']
-            code = client_code
-        if pd.isna(data.at[index, 'Общ.сумма']):
-            price = price_table
-        else:
-            price_table = row['Общ.сумма']
-            price = price_table
+        client_code = row['Код клиента'] if not pd.isna(row['Код клиента']) else ''
+        price = row['Общ.сумма'] if not pd.isna(row['Общ.сумма']) else ''
+
+        # Отправляем сообщение клиенту
         for i, row in enumerate(data2, start=2):
-            if str(row['id']) == str(code):
-                tg_id = row['tg_id']
-                if tg_id != '':
-                    await bot.send_message(text=f'Ваша посылка с трек кодом {track_code} прибыла на склад', chat_id=int(tg_id))
-        k = 0
+            if str(row['id']) == str(client_code) and row['tg_id']:
+                try:
+                    await bot.send_message(text=f'Ваша посылка с трек кодом {track_code} прибыла на склад', chat_id=int(row['tg_id']))
+                except:
+                    continue
+
+        # Подготовка данных для массового обновления
         for i, row in enumerate(sheet_data, start=2):
-            k += 1
             if row['Трек Код'] == track_code:
-                price = price if price not in ['0', 0] else ''
-                sheet.update(f'A{i}:E{i}', [[track_code, code, new_status, current_date, price]])
-            if k == 100:
-                await asyncio.sleep(1)
-                k = 0
+                updates.append({
+                    'range': f'A{i}:E{i}',
+                    'values': [[track_code, client_code, new_status, current_date, price if price not in ['0', 0] else '']]
+                })
+
+        # Добавляем паузы, если слишком много данных
+        if len(updates) >= 1000:  
+            sheet.batch_update(updates)
+            updates.clear()
+            await asyncio.sleep(2)  
+
+    # Обновляем оставшиеся данные
+    if updates:
+        sheet.batch_update(updates)
 
 
 
