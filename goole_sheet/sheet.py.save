@@ -19,9 +19,10 @@ def append_products(df):
     values = df.values.tolist()
     data = []
     for index, row in df.iterrows():
+        current_date = row.
         track_code = row.iloc[1]
         status = 'В Пути'
-        date = row.iloc[2]
+        date = current_date
         data.append([track_code, '', status, date])
     sheet.append_rows(data)
     return True
@@ -65,8 +66,7 @@ async def update_google_sheet(data, new_status, bot):
         for i, row in enumerate(data2, start=2):
             if str(row['id']) == str(code):
                 tg_id = row['tg_id']
-                if tg_id != '':
-                    await bot.send_message(text=f'Ваша посылка с трек кодом {track_code} прибыла на склад', chat_id=int(tg_id))
+                await bot.send_message(text=f'Ваша посылка с трек кодом {track_code} прибыла на склад', chat_id=int(tg_id))
         for i, row in enumerate(sheet_data, start=2):
             if row['Трек Код'] == track_code:
                 price = price if price not in ['0', 0] else ''

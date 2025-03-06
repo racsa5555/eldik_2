@@ -99,7 +99,7 @@ async def register(message:Message,state:FSMContext):
 @dp.message(F.text.in_({'Войти','Кируу'}))
 async def login(message:Message, state: FSMContext):
     data = await state.get_data()
-    if data['language'] == 'RU':
+    if data.get('language', 'RU') == 'RU':
         await message.answer(text = 'Введите номер телефона',reply_markup=cancel_calc_ru)
     else:
         await message.answer(text = 'Телефон номериңизди жазыныз',reply_markup=cancel_calc_kg)
